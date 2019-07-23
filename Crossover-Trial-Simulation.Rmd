@@ -177,9 +177,6 @@ p2 <- function(x) {formatC(x, format="f", digits=4)}
     confint(Fit)
     
  
-
-  
-
 ```
 \newpage  
 
