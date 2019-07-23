@@ -1,5 +1,5 @@
 ---
-title: "Crossover Trial Power using Simulation"
+title: "Crossover Trial Power Using Simulation"
 author: "Eamonn O'Brien"
 date: '`r format(Sys.time(), "%d %B, %Y")`'
 output:
@@ -61,7 +61,7 @@ p2 <- function(x) {formatC(x, format="f", digits=4)}
 
 ```
 
-## Function to simulate crossover trial using lme4 (warning mnessage: boundary (singular) fit: see ?isSingular)
+## Function to simulate crossover trial using lme4 
 
 ```{r function}
 
@@ -95,15 +95,17 @@ p2 <- function(x) {formatC(x, format="f", digits=4)}
 
   # power for n=20 and treatment effect 4 
    mean(replicate(1000, simulatec(n=20, beta=c(8, 4, 0, 0))))
+   # (many warning messages: boundary (singular) fit: see ?isSingular)
 
 ```
 
 \newpage
 
-## Function to simulate crossover trial using nlme (no warning messages for equivalent analyses compared to lme4)
+## Function to simulate crossover trial using nlme 
 
 ```{r nlme function}
 
+# no warning messages for equivalent analyses compared to lme4
 # A random effect very near zero seems to be the reason for the warning message using lme4 
 
  require(nlme)
@@ -125,68 +127,11 @@ p2 <- function(x) {formatC(x, format="f", digits=4)}
     Fit  <- lme(Response~ Treatment * Order, random=~1 | Patient, data=Data, na.action="na.omit" )
     Est <- fixed.effects(Fit)[2]
     Ste <- sqrt(vcov(Fit)[2,2])
-    prod(Est + c(-1,1) * qnorm(1-alpha/2) * Ste) > 0 #(logic: neg*neg = pos, so excludes 0)
+    prod(Est + c(-1,1) * qnorm(1-alpha/2) * Ste) > 0  
 }
        
  # power for n=20 and treatment effect 4 
    mean(replicate(1000, simulaten(n=20, beta=c(8, 4, 0, 0))))
-
-  
-```
-
-\newpage  
-
-## Show model matrix for fixed effects
-
-```{r fixed}
- 
-  
-```
-
-\newpage  
-
-## Show model matrix for random effects
-
-```{r random}
- 
-     
-  
-```
-
-\newpage 
-
-## Show the simulated data
-
-```{r data}
- 
-```
-
-\newpage  
-
-## Fit Model
-
-```{r Model}
- 
-  
-```
-
-\newpage  
-
-##  Simulate a very large crossover trial and analyse
-
-```{r larger trial }
- 
-    
-
-```
-
-\newpage  
-
-## Analyse the large trial
-
-```{r large trial analysis}
- 
-     
 
   
 
