@@ -1,0 +1,212 @@
+---
+title: "Crossover Trial Power using Simulation"
+author: "Eamonn O'Brien"
+date: '`r format(Sys.time(), "%d %B, %Y")`'
+output:
+  pdf_document:
+    toc: true
+    toc_depth: 2
+  fig_height: 6
+  fig_width: 8
+header-includes:
+- \usepackage{eso-pic,graphicx,transparent}
+- \usepackage{graphicx}
+- \usepackage{fancyhdr}
+- \pagestyle{fancy}
+- \setlength\headheight{22pt}
+- \fancyfoot[RO]{Estimating Population Size}
+- \usepackage{lastpage}
+- \cfoot{Page \thepage\ of \pageref{LastPage}}
+---
+
+\newpage  
+\tableofcontents  
+\listoffigures
+\listoftables
+\newpage
+
+```{r set-options, echo=FALSE, cache=FALSE, warning = FALSE}
+
+ 
+
+         set.seed(123)
+         startTime<-proc.time()
+         library(knitr)
+         options(width=60)
+
+         opts_chunk$set(comment = "", warning = FALSE, message = FALSE,
+                       echo = TRUE, tidy = TRUE, size="tiny",  cache=FALSE,
+                       progress=TRUE, tidy.opts=list(width.cutoff=60),
+                         fig.width=7, fig.height=3.5,
+                       cache.path = 'program_Cache/',
+                       fig.path='figure/')
+         
+        # opts_chunk$set(tidy.opts=list(width.cutoff=80),tidy=TRUE) 
+         
+        knitr::knit_hooks$set(inline = function(x) {
+          knitr:::format_sci(x, 'md')
+        })
+         
+        
+        options(scipen=999)  # remove scientific notation
+        
+
+```
+
+## 
+
+```{r ,echo=FALSE}
+
+p2 <- function(x) {formatC(x, format="f", digits=4)}
+
+```
+
+## Function to simulate crossover trial using lme4 (warning mnessage: boundary (singular) fit: see ?isSingular)
+
+```{r function}
+
+ 
+# n - number of patients in each order group
+# sdW - within patient standard deviation
+# sdB - between patient standard deviation
+# beta - coefficient vector c(Intercept, Treatment, Order, Treatment:Order)
+
+    require("lme4")
+
+  simulatec <- function(n=10, sdW=4, sdB=1, beta=c(8, 1, 0, 0), alpha=0.05) {
+  
+    # generate data
+    Patient   <- as.factor(rep(1:(2*n), rep(2, 2*n)))
+    Treatment <- c(rep(c("Treatment1", "Treatment2"), n),
+                   rep(c("Treatment2", "Treatment1"), n))
+    Order     <- rep(c("First", "Second"), 2*n)
+    Data      <- data.frame(Patient, Treatment, Order)
+    FMat      <- model.matrix(~ Treatment * Order, data=Data)
+    RMat      <- model.matrix(~ 0 + Patient, data=Data)
+    Response  <- FMat %*% beta + RMat %*% rnorm(2*n, 0, sdB) + rnorm(4*n, 0, sdW)
+    Data$Response <- Response
+    
+    # analyse
+    Fit <- lmer(Response ~ (1 | Patient) + Treatment * Order, data=Data)
+    Est <- fixef(Fit)[2]
+    Ste <- sqrt(vcov(Fit)[2,2])
+    prod(Est + c(-1,1) * qnorm(1-alpha/2) * Ste) > 0
+ } 
+
+  # power for n=20 and treatment effect 4 
+   mean(replicate(1000, simulatec(n=20, beta=c(8, 4, 0, 0))))
+
+```
+
+\newpage
+
+## Function to simulate crossover trial using nlme (no warning messages for equivalent analyses compared to lme4)
+
+```{r nlme function}
+
+# A random effect very near zero seems to be the reason for the warning message using lme4 
+
+ require(nlme)
+
+ simulaten <- function(n=10, sdW=4, sdB=1, beta=c(8, 1, 0, 0), alpha=0.05) {
+  
+    # generate data
+    Patient   <- as.factor(rep(1:(2*n), rep(2, 2*n)))
+    Treatment <- c(rep(c("Treatment1", "Treatment2"), n),
+                   rep(c("Treatment2", "Treatment1"), n))
+    Order     <- rep(c("First", "Second"), 2*n)
+    Data      <- data.frame(Patient, Treatment, Order)
+    FMat      <- model.matrix(~ Treatment * Order, data=Data)
+    RMat      <- model.matrix(~ 0 + Patient, data=Data)
+    Response  <- FMat %*% beta + RMat %*% rnorm(2*n, 0, sdB) + rnorm(4*n, 0, sdW)
+    Data$Response <- Response
+    
+    # analyse
+    Fit  <- lme(Response~ Treatment * Order, random=~1 | Patient, data=Data, na.action="na.omit" )
+    Est <- fixed.effects(Fit)[2]
+    Ste <- sqrt(vcov(Fit)[2,2])
+    prod(Est + c(-1,1) * qnorm(1-alpha/2) * Ste) > 0 #(logic: neg*neg = pos, so excludes 0)
+}
+       
+ # power for n=20 and treatment effect 4 
+   mean(replicate(1000, simulaten(n=20, beta=c(8, 4, 0, 0))))
+
+  
+```
+
+\newpage  
+
+## Show model matrix for fixed effects
+
+```{r fixed}
+ 
+  
+```
+
+\newpage  
+
+## Show model matrix for random effects
+
+```{r random}
+ 
+     
+  
+```
+
+\newpage 
+
+## Show the simulated data
+
+```{r data}
+ 
+```
+
+\newpage  
+
+## Fit Model
+
+```{r Model}
+ 
+  
+```
+
+\newpage  
+
+##  Simulate a very large crossover trial and analyse
+
+```{r larger trial }
+ 
+    
+
+```
+
+\newpage  
+
+## Analyse the large trial
+
+```{r large trial analysis}
+ 
+     
+
+  
+
+```
+\newpage  
+
+## Computing Environment
+
+```{r}
+
+sessionInfo()
+
+```
+
+```{r echo=FALSE}
+
+stopTime<-proc.time()
+
+```
+
+This took `r (stopTime-startTime)[1][[1]]` seconds to execute.
+
+ 
