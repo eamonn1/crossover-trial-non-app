@@ -64,7 +64,7 @@ p2 <- function(x) {formatC(x, format="f", digits=4)}
 
  
 
-## Simulate crossover trial
+## Simulate a tiny crossover trial to show matrices
 
 ```{r function}
 
@@ -87,26 +87,52 @@ p2 <- function(x) {formatC(x, format="f", digits=4)}
     
     Data      <- data.frame(Patient, Treatment, Order)
     
-    FMat      <- model.matrix(~ Treatment * Order, data=Data)
+    FMat      <- model.matrix(~ Treatment * Order, data=Data)   # Fixed effects
     
-    RMat      <- model.matrix(~ 0 + Patient, data=Data)
+    RMat      <- model.matrix(~ 0 + Patient, data=Data)         # Random effects
     
-    Response  <- FMat %*% beta + RMat %*% rnorm(2*n, 0, sdB) + rnorm(4*n, 0, sdW)
+    Response  <- FMat %*% beta + RMat %*% rnorm(2*n, 0, sdB) + rnorm(4*n, 0, sdW) # matrix multiplication
     
     Data$Response <- Response
-    
-    FMat
-    
-    RMat
-    
-    Data 
- 
-   ##
+
 ```
 
 \newpage  
 
-## Model
+## Show model matrix for fixed effects
+
+```{r fixed}
+
+    FMat
+     
+  
+```
+
+\newpage  
+
+## Show model matrix for random effects
+
+```{r random}
+
+    RMat
+     
+  
+```
+
+\newpage 
+
+## Show the simulated data
+
+```{r data}
+
+
+    Data 
+ 
+```
+
+\newpage  
+
+## Fit Model
 
 ```{r Model}
 
@@ -119,27 +145,38 @@ p2 <- function(x) {formatC(x, format="f", digits=4)}
 
 \newpage  
 
-##  
+##  Simulate a very large crossover trial and analyse
 
-```{r 2 }
+```{r larger trial }
 
-                 
+    n <- 5000   # number of patients
+    sdB= 1   # between person SD
+    sdW= 1   # within person SD
+    beta=c(1, 1, 1, 1)  #intercept, main effect, order effect, interaction
+    Patient   <- as.factor(rep(1:(2*n), rep(2, 2*n)))
+    Treatment <- c(rep(c("Treatment1", "Treatment2"), n),
+                 rep(c("Treatment2", "Treatment1"), n))
+    
+    Order     <- rep(c("First", "Second"), 2*n)
+    Data      <- data.frame(Patient, Treatment, Order)
+    FMat      <- model.matrix(~ Treatment * Order, data=Data)   # Fixed effects
+    RMat      <- model.matrix(~ 0 + Patient, data=Data)         # Random effects
+    Response  <- FMat %*% beta + RMat %*% rnorm(2*n, 0, sdB) + rnorm(4*n, 0, sdW) # matrix multiplication
+    
 
 ```
 
 \newpage  
 
-## 
+## Analyse the large trial
 
-```{r 3}
+```{r large trial analysis}
  
-```
-
-\newpage  
-
-## 
-
-```{r 4}
+    summary(Fit <- lme4::lmer(Response ~ (1 | Patient) + Treatment * Order, data=Data))
+    
+    confint(Fit)
+    
+ 
 
   
 
