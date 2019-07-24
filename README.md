@@ -7,4 +7,4 @@ Crossover trial simulation and analysis
 
 3 Simulate more sophisticatedly where can vary one parameter
 
-4 Simulate one trial and go on to analyses, the focus though is on plotting the data
+4 Simulate one trial and go on to analyse, the focus though is on plotting the data
