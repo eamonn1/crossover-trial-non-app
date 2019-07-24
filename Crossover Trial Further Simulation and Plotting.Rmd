@@ -250,10 +250,13 @@ p4 <- function(x) {formatC(x, format="f", digits=4)}
 
 ```{r stats, eval=TRUE}    
     
+    options(digits = 3)
     library("tidyverse")
     group_by(mydata, temp) %>%
       summarise(
         count = n(),
+        mean=mean(Response, na.rm = TRUE),
+        SD = sd(Response, na.rm = TRUE),
         median = median(Response, na.rm = TRUE),
         IQR = IQR(Response, na.rm = TRUE)
       )
