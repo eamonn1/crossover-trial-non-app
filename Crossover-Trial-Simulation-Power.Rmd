@@ -14,7 +14,7 @@ header-includes:
 - \usepackage{fancyhdr}
 - \pagestyle{fancy}
 - \setlength\headheight{22pt}
-- \fancyfoot[RO]{Estimating Population Size}
+- \fancyfoot[RO]{Crossover study design}
 - \usepackage{lastpage}
 - \cfoot{Page \thepage\ of \pageref{LastPage}}
 ---
