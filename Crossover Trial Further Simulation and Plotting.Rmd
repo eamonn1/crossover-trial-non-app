@@ -14,7 +14,7 @@ header-includes:
 - \usepackage{fancyhdr}
 - \pagestyle{fancy}
 - \setlength\headheight{22pt}
-- \fancyfoot[RO]{Estimating Population Size}
+- \fancyfoot[RO]{Crossover study design}
 - \usepackage{lastpage}
 - \cfoot{Page \thepage\ of \pageref{LastPage}}
 ---
@@ -34,6 +34,8 @@ header-includes:
          library(knitr)
          options(width=60)
 
+         knitr::opts_chunk$set(dev = 'pdf') # helps with plots
+         
          opts_chunk$set(comment = "", warning = FALSE, message = FALSE,
                        echo = TRUE, tidy = TRUE, size="tiny",  cache=FALSE,
                        progress=TRUE, tidy.opts=list(width.cutoff=60),
@@ -57,7 +59,8 @@ header-includes:
 
 ```{r ,echo=FALSE}
 
-p2 <- function(x) {formatC(x, format="f", digits=4)}
+p2 <- function(x) {formatC(x, format="f", digits=2)}
+p4 <- function(x) {formatC(x, format="f", digits=4)}
 
 ```
 
@@ -210,158 +213,249 @@ p2 <- function(x) {formatC(x, format="f", digits=4)}
 
 \newpage
 
+## Simulate a ABBA data set with known effects that has good power
 
-```{r analyse4, eval=FALSE}
-  
-  mydata <- ABBA(n=10, sdW=2, sdB=2, beta=c(8, 1, 0, 0), alpha=0.05 )
-  par(mfrow=c(3,1))
-    ggpubr::ggpaired(mydata , x="Treatment", y = "Response",
-                   color = "Treatment", line.color = "gray", line.size = 0.4,
-                   palette = "npg", title="Pooled across period comparison")+
-    stat_compare_means(paired = TRUE)
+```{r sim data, eval=TRUE}
 
+    #require(ggpubr)
+    require(ggplot2)
 
-
-    ggpubr::ggpaired(mydata[mydata$Order=="First",], x="Treatment", y = "Response",
-                  color = "Treatment", line.color = "gray", line.size = 0.4,
-                  palette = "npg", , title="First period comparison")+
-    stat_compare_means(paired = TRUE)  
+    # state some parameters so we can pick them up later on in plot titles
+    sb <- 2
+    sw <- 2
+    beta=c(8, 2, 1, 0)
     
-    ggpubr::ggpaired(mydata[mydata$Order=="Second",], x="Treatment", y = "Response",
-                   color = "Treatment", line.color = "gray", line.size = 0.4,
-                   palette = "npg" , title="Second period comparison")+
-    stat_compare_means(paired = TRUE)
-    par(mfrow=c(1,1))
-
-
-#http://www.surefoss.org/visualisation/visualizing-small-scale-paired-data-combining-boxplots-stripcharts-and-confidence-intervals-in-r/
-
-co.plot<-function (mydata){
-  
-  par(mfrow=c(2,2))
-
-  mydata$temp <- paste(mydata$Treatment, mydata$Order, sep=".")
-  
-  pre<-as.vector(mydata[grepl("Treatment1.First", mydata$temp),  4 ])
-  post<-as.vector(mydata[grepl("Treatment1.Second", mydata$temp),  4 ])
-    s<-seq(length(pre))
-  par(bty="l")
-  
-  boxplot(pre,post,main="Treatment1->Treatment2",xlab="Order",ylab="Sig Score",
-          names=c("Treatment1","Treatment2"),col=c("lightgreen","lightblue"))
-  stripchart(list(pre,post),vertical=T,pch=16,method="jitter",cex=0.5,add=T)
-  segments(rep(0.95,length(pre))[s],pre[s],rep(2,length(pre))[s],post[s],col=1,lwd=0.5)
-  
-  res<-wilcox.test(post,pre,paired=T,conf.int=T)
-  stripchart(post-pre,vertical=T,pch=16,method="jitter",main="Difference",
-             ylab="Difference:Treatment2-Treatment1",xlab="Median+/-95%CI")
-  points(1,res$estimate,col="red",pch=16,cex=2)
-  arrows(1,res$conf.int[1],1,res$conf.int[2],col="red",code=3,lwd=3,angle=90)
-  abline(h=0,lty=2)#Zero-effectline
-  
-  pre<-as.vector(mydata[grepl("Treatment2.First", mydata$temp),  4 ])
-  post<-as.vector(mydata[grepl("Treatment2.Second", mydata$temp),  4 ])
-  s<-seq(length(pre))
-  par(bty="l")
-  
-  boxplot(pre,post,main="Treatment2->Treatment1",xlab="Order",ylab="Sig Score",
-          names=c("Treatment2","Treatment1"),col=c("lightblue","lightgreen"))
-  stripchart(list(pre,post),vertical=T,pch=16,method="jitter",cex=0.5,add=T)
-  segments(rep(0.95,length(pre))[s],pre[s],rep(2,length(pre))[s],post[s],col=1,lwd=0.5)
-  
-  res<-wilcox.test(post,pre,paired=T,conf.int=T)
-  stripchart(post-pre,vertical=T,pch=16,method="jitter",main="Difference",
-             ylab="Difference:Treatment1–Treatment2",xlab="Median+/-95%CI")
-  points(1,res$estimate,col="red",pch=16,cex=2)
-  arrows(1,res$conf.int[1],1,res$conf.int[2],col="red",code=3,lwd=3,angle=90)
-  abline(h=0,lty=2)#Zero-effectline
-  #detach(mydata)
-  par(mfrow=c(1,1))
-  
-  }
-
- x<- ABBA(n=50, sdW=2, sdB=2, beta=c(8, 4, 1, 0), alpha=0.05 )
-co.plot( x)
-
-
-#######################################################################
-###########PLOT 1######################################################
-#######################################################################
-
-
-mydata<- ABBA(n=50, sdW=2, sdB=2, beta=c(8, 4, 1, 0), alpha=0.05 )
-
-p4 <- function(x) {formatC(x, format="f", digits=4)}
-
-d1<-mydata
-require(reshape)
-d1$grp<-paste(d1$Treatment, d1$Order, sep=" ")
-d1 <- rename(d1, c(Response="count"))
-d1 <- rename(d1, c(grp="spray"))
-d1 <- d1[order(d1$spray),]
-
-attach(d1)
-sprayTypes <- unique(spray)
-
-y<-as.numeric(as.character(d1[,4]))
-
-plot(y, as.factor(d1[,5]) ,  ylim=c(min(y),max(y)) , xlim=c(1, 5) , xaxt="n",
-     main=paste("\nTruth: Intercept (TRT2 mean) ",beta[1],", TRT (main) effect ",beta[2],", \nSecond scan (order) effect ",
-                beta[3], ", \n Interaction (TRT only second scan effect)",beta[4],
-                ", \n Between subjects SD",sb,", within subjects SD", p4(sw) ),
-     xlab="", ylab="Outcome measure", frame.plot  =F , col="white")  
-##if not white I get a nasty boxplot
-
-axis(1,  at=1:4, labels=F )
-
-text(x=1:length(sprayTypes)*1.05, par("usr")[3]-0.08 , labels = sprayTypes,
-     srt = 45, pos = 2, xpd = TRUE,  
-     cex.axis=.5 )
-
-##make colours
-chk<-as.character(d1$spray)
-x<-as.data.frame(table(chk))
-freq<-x[,2]
-value<-max(dput(1:dim(x)[1]))
-IR<-value+1
-clr<-rainbow(IR)
-clr<-c("blue","red")
-wR<-(2*IR-1:IR)/(2*IR)
-##colour made
-for (i in 1 : length(sprayTypes)){
-  y <- count[spray == sprayTypes[i]]
-  n <- sum(spray == sprayTypes[i])
-  points(jitter(rep(i, n), amount = .1), y, pch = 16, cex = .5,
-         
-         
-         col=ifelse(i<3,clr[1],clr[2])
-         
-  )
-  
-  col=ifelse(Treatment=="Treatment1",clr[1],clr[2])
-  
-  lines(i + c(.12, .28), rep(mean(y), 2), lwd = 1, col="black")
-  lines(rep(i + .2, 2),
-        mean(y) + c(-1.96, 1.96) * sd(y) / sqrt(n),  lwd = 1, col="black"
-        
-  )
-}
-
-detach(d1)
-#######################################################################
-#######################################################################
-#######################################################################
+    #check the power, it is not likely the main effect will be missed, we even have good power for the order effect.
+    C.power(a=100, b=sb, c=sw, d=beta[1], e=beta[2], f=beta[3], g=beta[4], n.sims=1000)
+     
+    # so lets create the data
+    mydata <-  ABBA(n=100, sdW=2, sdB=2, beta=c(8, 2, 1, 0), alpha=0.05 )
+     
+    # analysis
+    tryCatch(f1<-lme(Response~  Treatment * Order, random=~1 | Patient, data=mydata,
+                           na.action="na.omit" ) , 
+                   error=function(e) e)
+    
+    summary(f1)
+    intervals(f1)   
+    
+    # useful concatenation for plotting
+    mydata$temp <- paste(mydata$Treatment, mydata$Order, sep=".")
 
 ```
 
 \newpage
 
-## Function to simulate crossover trial using nlme 
+## Summary stats
 
-```{r nlme function}
+```{r stats, eval=TRUE}    
+    
+    library("tidyverse")
+    group_by(mydata, temp) %>%
+      summarise(
+        count = n(),
+        median = median(Response, na.rm = TRUE),
+        IQR = IQR(Response, na.rm = TRUE)
+      )
+
+    #
+    #
+    # I tried this package, it was only ok
+  
+    # B <- mydata[mydata$temp %in% "Treatment1.First" | mydata$temp %in% "Treatment2.Second",]
+    # 
+    # B1  <- ggpubr::ggpaired(B, x="Treatment", y = "Response",
+    #               color = "Treatment", line.color = "gray", line.size = 0.4,
+    #               palette = "npg", , title="First period comparison") +
+    # stat_compare_means(paired = TRUE)  
+    # 
+    # C <- mydata[mydata$temp %in% "Treatment2.First" | mydata$temp %in% "Treatment1.Second",]
+    # 
+    # 
+    # C1 <- ggpubr::ggpaired(C, x="Treatment", y = "Response",
+    #                color = "Treatment", line.color = "gray", line.size = 0.4,
+    #                palette = "npg" , title="Second period comparison")+
+    # stat_compare_means(paired = TRUE)
+   
+    # print(B1);print(C1)
+     
+```
+
+\newpage
+
+## Use a package to plot AB sequence then BA sequence, should be mirror image ideally
+
+```{r plot1, eval=TRUE, results='asis'}    
+    
+    require("PairedData")
+    Treatment1.First <- subset(mydata,  temp == "Treatment1.First", Response, drop = TRUE)
+    Treatment2.Second <- subset(mydata,  temp == "Treatment2.Second", Response, drop = TRUE)
+     
+    pd <- paired(Treatment1.First, Treatment2.Second)
+    plot(pd, type = "profile") + theme_bw()
+       
+    cat("\n\n\\pagebreak\n")
+ 
+    Treatment2.First <- subset(mydata,  temp == "Treatment2.First", Response, drop = TRUE)
+    Treatment1.Second <- subset(mydata,  temp == "Treatment1.Second", Response, drop = TRUE)
+     
+    pd <- paired(Treatment2.First, Treatment1.Second)
+    plot(pd, type = "profile") + theme_bw()
+           
+
+
+```
+
+\newpage
+
+## My code to plot treatment comparisons
+
+```{r plot2 code, fig.width=14, fig.height=16,    eval=TRUE} 
+
+#http://www.surefoss.org/visualisation/visualizing-small-scale-paired-data-combining-boxplots-stripcharts-and-confidence-intervals-in-r/
+
+   # main effect 4 and an order effect of 1, no interaction
+   # so second period gets a boost of +1
 
  
+  co.plot<-function (mydata){
+    
+    par(mfrow=c(2,2))
   
+    # creat a concatenated variable
+    mydata$temp <- paste(mydata$Treatment, mydata$Order, sep=".")
+    
+    # pull out AB data
+    post <- as.vector(mydata[grepl("Treatment1.First",  mydata$temp),  4 ])
+    pre <-  as.vector(mydata[grepl("Treatment2.Second", mydata$temp),  4 ])
+    s <- seq(length(pre))
+    par(bty="l")
+    
+    # boxplot AB
+    boxplot(post,pre,main="Treatment1 -> Treatment2 (AB)",xlab="Order",ylab="Response",
+            names=c("Period 1 (TRT1)","Period 2 (TRT2)"),col=c("lightgreen","lightblue"))
+    
+    # Add raw data with jitter
+    stripchart(list(post,pre),vertical=T,pch=16,method="jitter",cex=0.5,add=T)
+    # join lines, this would be better if jittered points were joined
+    segments(rep(0.95,length(pre))[s],post[s],rep(2,length(pre))[s],pre[s],col=1,lwd=0.5)
+    
+    # Wilcoxon signed rank test 
+    res <- wilcox.test(post,pre,paired=T,conf.int=T)
+    stripchart(post-pre,vertical=T,pch=16,method="jitter",main="Median of all differences TRT1 - TRT2",
+               ylab="Difference:Treatment1-Treatment2",xlab="Median of all differences +/-95%CI")
+    points(1,res$estimate,col="red",pch=16,cex=2)
+    arrows(1,res$conf.int[1],1,res$conf.int[2],col="red",code=3,lwd=3,angle=90)
+    abline(h=0,lty=2)#Zero-effect line
+    
+    
+    
+    
+    
+    
+    
+    
+    # repeat for BA sequence
+    pre<-as.vector(mydata[grepl("Treatment2.First", mydata$temp),  4 ])
+    post<-as.vector(mydata[grepl("Treatment1.Second", mydata$temp),  4 ])
+    s<-seq(length(pre))
+    par(bty="l")
+    
+    boxplot(pre,post,main="Treatment2 -> Treatment1 (BA)",xlab="Order",ylab="Response",
+            names=c("Period 1 (TRT2)","Period 2 (TRT1)"),col=c("lightblue","lightgreen"))
+    stripchart(list(pre,post),vertical=T,pch=16,method="jitter",cex=0.5,add=T)
+    segments(rep(0.95,length(pre))[s],pre[s],rep(2,length(pre))[s],post[s],col=1,lwd=0.5)
+    
+    res<-wilcox.test(post,pre,paired=T,conf.int=T)
+    stripchart(post-pre,vertical=T,pch=16,method="jitter",main="Median of all differences TRT1 - TRT2",
+               ylab="Difference:Treatment1–Treatment2",xlab="Median of all differences +/-95%CI")
+    points(1,res$estimate,col="red",pch=16,cex=2)
+    arrows(1,res$conf.int[1],1,res$conf.int[2],col="red",code=3,lwd=3,angle=90)
+    abline(h=0,lty=2) # Zero-effect line
+    par(mfrow=c(1,1))
+    
+    }
+  
+```
+
+\newpage
+
+## Plot AB sequence then BA sequence, should be mirror image ideally
+
+
+```{r plot4 , fig.width=14, fig.height=16,    eval=TRUE} 
+  
+   co.plot(mydata)
+
+```
+
+\newpage
+
+## My code to plot all data in a useful way
+
+```{r plot5,  fig.width=14, fig.height=10,  eval=TRUE, results='asis'} 
+
+
+      d1 <- mydata
+      require(reshape)
+      d1$grp <- paste(d1$Treatment, d1$Order, sep=" ")
+      d1 <- rename(d1, c(Response="count"))
+      d1 <- rename(d1, c(grp="spray"))
+      d1 <- d1[order(d1$spray),]
+      
+      attach(d1)
+      sprayTypes <- unique(spray)
+      
+      y <- as.numeric(as.character(d1[,4]))
+      
+      plot(y, as.factor(d1[,5]) ,  ylim=c(min(y),max(y)) , xlim=c(1, 5) , xaxt="n",
+           main=paste("\nTruth: Intercept ",beta[1],", Treatment (main) effect ",beta[2],", order effect ", beta[3], ", interaction (TRT only second order effect)",beta[4],
+                      ", \n Between subjects SD",p2(sb),", within subjects SD", p2(sw) ),
+           xlab="", ylab="Outcome measure", frame.plot  =F , col="white")  
+      ##if not white I get a nasty boxplot
+      
+      axis(1,  at=1:4, labels=F )
+      
+      text(x=1:length(sprayTypes)*1.05, par("usr")[3]-0.08 , labels = sprayTypes,
+           srt = 45, pos = 2, xpd = TRUE,  
+           cex.axis=.5 )
+      
+      ##make colours
+      chk <- as.character(d1$spray)
+      x <- as.data.frame(table(chk))
+      freq <- x[,2]
+      value <- max(dput(1:dim(x)[1]))
+      IR <- value+1
+      clr <- rainbow(IR)
+      clr <- c("blue","red")
+      wR <- (2*IR-1:IR)/(2*IR)
+      ##colour made
+      for (i in 1 : length(sprayTypes)){
+        y <- count[spray == sprayTypes[i]]
+        n <- sum(spray == sprayTypes[i])
+        points(jitter(rep(i, n), amount = .1), y, pch = 16, cex = .5,
+              col=ifelse(i<3,clr[1],clr[2])
+               
+        )
+        
+        col=ifelse(Treatment=="Treatment1",clr[1],clr[2])
+        
+        lines(i + c(.12, .28), rep(mean(y), 2), lwd = 1, col="black")
+        lines(rep(i + .2, 2),
+              mean(y) + c(-1.96, 1.96) * sd(y) / sqrt(n),  lwd = 1, col="black"
+              
+        )
+      }
+
+      
+ 
+```
+
+
+```{r comment,  echo=FALSE, results='asis'}    
+
+    cat("\nThis is a useful plot to look at all the data together. Perhaps lines joining the pairs might be an improvement to show between and within person variation. The crosses are the arithmetic means and 95% CIs. The first left cross is an estimate of the intercept. We can see the treatment effect, the red data is greater than blue. The order effect is apparent too, second period is higher than first. We are expecting this (we know the truth). We did power this study, so there is a high probability the main effect should manifest and to a lesser probability also the order. We know in truth there is no interaction.\n") 
+     
 
 ```
 \newpage  
