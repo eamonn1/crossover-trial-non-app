@@ -1,9 +1,9 @@
 # crossover-trial
-Crossover trial simulation and analysis
 
 Crossover-Trial-Simulation
 Introduce a function to simulate ABBA crossover study
 
+Crossover-Trial-Simulation-Power.pdf
 Showing the analysis of ABBA using lme4 and nlme
 
 Crossover-Trial-Further-Simulation-and-Plotting 
