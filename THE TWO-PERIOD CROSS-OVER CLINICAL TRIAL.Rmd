@@ -1,0 +1,338 @@
+---
+title: "THE TWO-PERIOD CROSS-OVER CLINICAL TRIAL"
+author: "Eamonn O'Brien"
+date: '`r format(Sys.time(), "%d %B, %Y")`'
+output:
+  pdf_document:
+    toc: true
+    toc_depth: 2
+  fig_height: 6
+  fig_width: 8
+header-includes:
+- \usepackage{eso-pic,graphicx,transparent}
+- \usepackage{graphicx}
+- \usepackage{fancyhdr}
+- \pagestyle{fancy}
+- \setlength\headheight{22pt}
+- \fancyfoot[RO]{Crossover study design}
+- \usepackage{lastpage}
+- \cfoot{Page \thepage\ of \pageref{LastPage}}
+---
+
+\newpage  
+\tableofcontents  
+\listoffigures
+\listoftables
+\newpage
+
+```{r set-options, echo=FALSE, cache=FALSE, warning = FALSE}
+
+ 
+
+         set.seed(123)
+         startTime<-proc.time()
+         library(knitr)
+         options(width=60)
+
+         knitr::opts_chunk$set(dev = 'pdf') # helps with plots
+         
+         opts_chunk$set(comment = "", warning = FALSE, message = FALSE,
+                       echo = TRUE, tidy = TRUE, size="tiny",  cache=FALSE,
+                       progress=TRUE, tidy.opts=list(width.cutoff=60),
+                         fig.width=7, fig.height=3.5,
+                       cache.path = 'program_Cache/',
+                       fig.path='figure/')
+         
+        # opts_chunk$set(tidy.opts=list(width.cutoff=80),tidy=TRUE) 
+         
+        knitr::knit_hooks$set(inline = function(x) {
+          knitr:::format_sci(x, 'md')
+        })
+         
+        
+        options(scipen=999)  # remove scientific notation
+        
+
+```
+
+
+
+```{r ,echo=FALSE}
+
+p2 <- function(x) {formatC(x, format="f", digits=2)}
+p4 <- function(x) {formatC(x, format="f", digits=4)}
+
+```
+
+## Hardcode in the data from Hills and Armitage Br. J. clin. Pharmac. (1979), 8, 7-20
+
+
+```{r function}
+ 
+   patient1 <- c(1,3,4,6,7,9,11,13,16,18,19,21,22,24,25,27,28)
+   y1 <- c(8,14,8,9,11,3,6,0,13,10,7,13,8,7,9,10,2)
+   treatment1 <- rep("Treatment1",length(patient1))
+   order <- rep("First",length(treatment1))
+   
+   
+   treatment2 <- rep("Treatment2",length(treatment1))
+   order2 <- rep("Second",length(treatment1))
+   y2 <- c(5,10,0,7,6,5,0,0,12,2,5,13,10,7,0,6,2)
+   
+   
+   patient2 <- c(2,5,8,10,12,14,15,17,20,23,26,29)
+   y1a<-c(12,6,13,8,8,4,8,2,8,9,7,7) 
+   treatment2a <- rep("Treatment2",length(patient2))
+   order3 <- rep("First",length(patient2))
+   
+   
+   y1b <-c(11,8,9,8,9,8,14,4,13,7,10,6)
+   order4 <- rep("Second",length(patient2))
+   treatment3a <- rep("Treatment1",length(patient2))
+   
+   grp1 <- cbind(as.numeric(patient1) , 
+                 (as.character(treatment1)), 
+                 (as.character(order)), as.numeric(y1))
+   
+   grp2 <- cbind(as.numeric(patient1) , 
+                 (as.character(treatment2)), 
+                 (as.character(order2)), as.numeric(y2))
+   
+   grp3 <- cbind(as.numeric(patient2) , 
+                 (as.character(treatment2a)), 
+                 (as.character(order3)), as.numeric(y1a))
+   
+   grp4 <- cbind(as.numeric(patient2) , 
+                 (as.character(treatment3a)), 
+                 (as.character(order4)), as.numeric(y1b))
+   
+   
+   all <- as.data.frame(rbind(grp1, grp2, grp3, grp4))
+   
+   all <- plyr::arrange(all, V1, V2)
+   
+   names(all) <- c("Patient", "Treatment", "Order", "Response")
+   
+   all$Patient <- as.numeric(as.character(all$Patient))
+   all$Response <- as.numeric(as.character(all$Response))
+   
+   all <- plyr::arrange(all, Patient, Treatment)
+   
+  
+    knitr::kable(all)
+ 
+
+```
+
+\newpage
+
+## Period and treatment summary stats, agree with paper
+
+```{r analyse}
+
+ #with(all, tapply(Response, list(Treatment, Order),  mean))
+
+  require(tidyverse)
+  all %>% group_by(Treatment, Order) %>%
+      summarise_each(funs(n=length(!is.na(.)),
+                          mean, 
+                          sd, 
+                          se=sd(.)/sqrt(n())), 
+                     Response)
+  
+   # calc difference in treatements and summarise
+   w <- spread(select (all,-c(Order)), Treatment, Response)
+   
+   w <-   w %>%  select(Treatment1 , Treatment2) %>% mutate(Response= Treatment1 - Treatment2) #%>% head()
+    
+   w %>%  summarise(mean = mean(Response),
+                      sd = sd(Response),
+                       n = length(!is.na(Response)),
+                       se = sd/sqrt(n)
+       )
+    
+```
+
+\newpage
+
+## Fit a random effects model (not checking for order nor interaction) and linear regression model
+
+```{r sim2}
+
+   require(nlme)
+   f <- lme(Response ~ Treatment  , random=~1 | Patient, data=all, na.action="na.omit" )
+   anova(f)
+   summary(f)$tTable
+   intervals(f)
+   qqnorm(resid(f), main="Normal Q-Q Plot")
+   qqline(resid(f), col="red")
+   
+   # collect the treatment effect estimate to make inferences later
+   z <- as.matrix(summary(f)$tTable)
+   Treatment    <- z[2,1][[1]]
+   
+   
+   f <- lm(Response ~ Treatment , data=all, na.action="na.omit" )
+   summary(f)
+   
+   qqnorm(resid(f), main="Normal Q-Q Plot")
+   qqline(resid(f), col="red")
+
+```
+
+\newpage
+
+## Function to analyse using permutation approach to duplicate Stephen Senn talk
+
+```{r analyse2}
+
+   Dq1 <- all
+   library(data.table)
+   Dq1 <- as.data.table(all)
+ 
+   # function to get permuted distribution of treatment effect
+   
+   perm.dist <- function (block="yes", n.sims=10000){
+      
+      #set up an array to store parameter estimates
+      estArray <- array(NA, dim=c(n.sims,4))
+ 
+      for (s in 1:n.sims){
+         
+         #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+         # permute
+         
+         if (block=="yes") {
+            
+         # permute within person
+         permz <- Dq1[, y := sample(Response), by = Patient] 
+         
+             } else {
+            
+         # no blocking
+         permz <- Dq1[, y := sample(Response) ]   
+         
+         }
+         
+         #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+         # analysis
+         
+         # respecting blocking
+         possibleError <-  
+            tryCatch(f1<-lme( y ~ Treatment, random=~1 | Patient,
+                              data=permz,
+                              method="REML") , 
+                     error=function(e) e)
+         
+         # http://stackoverflow.com/questions/8093914/skip-to-next-value-of-loop-upon-error-in-r-trycatch
+         
+         if(!inherits(possibleError, "error")){
+            
+            modelint <- possibleError
+            z <- as.matrix(summary(modelint)$tTable)
+            
+         }
+            
+         
+         # ignoring blocking
+            possibleError2 <-  
+               tryCatch(f0<-lm(y ~ Treatment , data=permz) , 
+                        error=function(e) e)  
+            
+            if(!inherits(possibleError, "error")){  
+               
+               modelint1 <- possibleError2
+               zz <- as.matrix(summary(modelint1)$coefficients)
+            
+            
+      }
+             
+        
+         estArray[s,1]   <- z[2,1][[1]]         # collect trt effect estimate
+         estArray[s,2]   <- vcov(modelint)[2,2] # collect variance of trt effect estimate
+         
+         
+         estArray[s,3]   <- zz[2,1][[1]]         # collect trt effect estimate
+         estArray[s,4]   <- vcov(modelint1)[2,2] # collect variance of trt effect estimate
+         
+                  }
+      
+      list(estArray=estArray )
+   } 
+   
+   
+  
+   
+```
+
+\newpage
+
+## Execute the simulations
+
+```{r analyse3}
+
+   block    <- perm.dist(block="yes", n.sims=10000)
+   
+   no.block <- perm.dist(block="no", n.sims=10000)
+
+```
+
+\newpage
+
+## Plot the distributions
+
+```{r sim data, eval=FALSE}
+
+    plot(density(block))
+    plot(density(no.block))
+     
+```
+
+\newpage
+
+## Permutation p values
+
+```{r plot1, eval=TRUE, results='asis'}    
+    
+     # see Senn 34.09mins right panel youtube, good match!
+     sum(abs(block$estArray[,1]) >= abs(Treatment))/10000  # Senn 0.0014
+     sum(abs(no.block$estArray[,1]) >= abs(Treatment))/10000  # Senn 0.034
+    
+```
+
+\newpage
+
+## Summary statisitcs
+
+```{r plot2 code,   eval=TRUE} 
+
+     apply(block$estArray, 2, summary)
+
+     apply(block$estArray, 2, var)
+     
+     apply(no.block$estArray, 2, summary)
+     
+     apply(no.block$estArray, 2, var)
+
+  
+```
+
+\newpage  
+
+## Computing Environment
+
+```{r}
+
+sessionInfo()
+
+```
+
+```{r echo=FALSE}
+
+stopTime<-proc.time()
+
+```
+
+This took `r (stopTime-startTime)[1][[1]]` seconds to execute.
+
+ 
