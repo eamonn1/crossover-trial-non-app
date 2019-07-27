@@ -64,8 +64,7 @@ header-includes:
    p4 <- function(x) {formatC(x, format="f", digits=4)}
 
    # number of permutations
-   sim = 50000
-
+   sim = 100000
 
 ```
 
@@ -237,7 +236,7 @@ header-includes:
 ```{r comment1,  echo=FALSE, results='asis'}    
 
 
- cat("\nNice plot showing all the data, the blocking in the experiment (patient), the between patient distribution and the sequences of treatment. We would ideally expect AB and BA to be a relection of each other. We show the mean and 95% CI. In fact the standard errors or confidence intervals for individual means are based on an assumption of simple random sampling that is not the case in the crossover trial. So maybe a boxplot would be better. Random noise (jitter) added to datapoints in both x and y axes to make visualisation better.\n") 
+ cat("\nNice plot showing all the data, the blocking in the experiment (patient), the between patient distribution and the sequences of treatment. We would ideally expect AB and BA to be a reflection of each other. We show the mean and 95% CI. In fact the standard errors or confidence intervals for individual means are based on an assumption of simple random sampling that is not the case in the crossover trial. So maybe a boxplot would be better. Random noise (jitter) added to datapoints in both x and y axes to make visualisation better.\n") 
    
 
 ```
@@ -424,7 +423,7 @@ header-includes:
 
 
 
- cat("\nFunction that allows one to permutate data either conditioning on patient (block) correctly by permuting the two values within patient or ignoring the blocking and permuting across all the data. Secondly to run the correct analysis conditioning on patient (LMM model) or not conditioning on patient OLS model.\n") 
+ cat("\nFunction that allows one to permute data either conditioning on patient (block) correctly permuting the two values within patient or ignoring the blocking and permuting across all the data. Secondly to run the correct analysis conditioning on patient (LMM model) or not conditioning on patient OLS model.\n") 
   
    
 ```
@@ -541,15 +540,15 @@ header-includes:
 # table 2 COL 1/ TABLE 1 COL2 OK  B[1] A[4,2]
 # TABL 2 COL 3/TABL1 COL 4        B[3] A[4,4]
 
-cat("\nAs Stephen Senn explains in the video. Analysis must relect the block structure. Looking at the distributions of the permutated treatment effects, the effect is the same average difference. The distribution accounting for the fact the same patient is treated on two different occasions is narrower than the distribution that does not condition on patient, in consequence much more unusal event compared to the permutation distribution. (If covariates differ greatly from one patient to another we will see it in the residual error term and we make a judgement of efficacy of something compared to residual error term. Notice the different permutation p-values and compare to parametric p-values. Moral, more important than deciding to use a linear model or permutation test is to condition on block structure of experiment.\n")      
+cat("\nAs Stephen Senn explains in the video. Analysis must relect the block structure. Looking at the distributions of the permutated treatment effects, the effect is the same average difference. The distribution accounting for the fact the same patient is treated on two different occasions is narrower than the distribution that does not condition on patient, in consequence much more unusual event compared to the permutation distribution. (If covariates differ greatly from one patient to another we will see it in the residual error term and we make a judgement of efficacy of something compared to residual error term). Notice the different permutation p-values and compare to parametric p-values. Moral, more important than deciding to use a linear model or permutation test is to condition on block structure of experiment.\n")      
 
 cat("\nWhat happens when you balance but don't condition: That is to say, permute values respecting the fact that they come from a crossover but analysing them as if they came from parallel group trial:\n")
 
-cat("\nApproach, completely randomised and analysed as such", D[3][[1]],". Variance of the treatment effect is equal to the mean of the variance (of treatment effect over all randomisations)",C[4,4][[1]],"\n")
+cat("\nApproach, completely randomised and analysed as such. Variance of estimated treatment effect over all randomisations (based on", sim, "permutations)", D[3][[1]],". Mean of variance of estimated treatment effect over all randomisations  (based on", sim, "permutations), variance of the treatment effect is equal to the mean of the variance (of treatment effect over all randomisations)",C[4,4][[1]],"\n")
 
-cat("\nApproach, randomised within patient and analysed as such", B[1][[1]],". Variance of the treatment effect is equal to the mean of the variance (of treatment effect over all randomisations)",A[4,2][[1]],"\n")
+cat("\nApproach, randomised within patient and analysed as such. Variance of estimated treatment effect over all randomisations (based on", sim, "permutations)", B[1][[1]],". Mean of variance of estimated treatment effect over all randomisations (based on", sim, "permutations), Variance of the treatment effect is equal to the mean of the variance (of treatment effect over all randomisations)",A[4,2][[1]],"\n")
 
-cat("\nApproach, randomised within patient and analysed as completely randomised", B[3][[1]],". Variance of the treatment effect is not equal to the mean of the variance (of treatment effect over all randomisations)",A[4,4][[1]],"\n")
+cat("\nApproach, randomised within patient and analysed as completely randomised, Variance of estimated treatment effect over all randomisations (based on", sim, "permutations)",B[3][[1]],". Variance of the treatment effect is not equal to the mean of the variance (of treatment effect over all randomisations). Mean of variance of estimated treatment effect over all randomisations  (based on", sim, "permutations),",A[4,4][[1]],"\n")
 ```
 
 \newpage  
