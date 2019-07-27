@@ -34,7 +34,7 @@ header-includes:
          library(knitr)
          options(width=60)
 
-         knitr::opts_chunk$set(dev = 'pdf') # helps with plots
+         #knitr::opts_chunk$set(dev = 'pdf') # helps with plots
          
          opts_chunk$set(comment = "", warning = FALSE, message = FALSE,
                        echo = TRUE, tidy = TRUE, size="tiny",  cache=FALSE,
@@ -55,12 +55,17 @@ header-includes:
 
 ```
 
+# Some functions and parameters
 
+```{r personal functions and params  ,echo=FALSE}
 
-```{r ,echo=FALSE}
+   # useful for rounding 
+   p2 <- function(x) {formatC(x, format="f", digits=2)}
+   p4 <- function(x) {formatC(x, format="f", digits=4)}
 
-p2 <- function(x) {formatC(x, format="f", digits=2)}
-p4 <- function(x) {formatC(x, format="f", digits=4)}
+   # number of permutations
+   sim = 50000
+
 
 ```
 
@@ -126,6 +131,148 @@ p4 <- function(x) {formatC(x, format="f", digits=4)}
 
 \newpage
 
+## Plot the data
+
+```{r plot0 , dpi = 400,  fig.height=6,  eval=TRUE} 
+
+
+    #  order ABBA
+    
+    d1 <- all
+    require(reshape)
+    d1$grp <- paste(d1$Treatment, d1$Order, sep=" ")
+    d1 <- rename(d1, c(Response="count"))
+    d1 <- rename(d1, c(grp="spray"))
+
+    # https://stackoverflow.com/questions/17031039/how-to-sort-a-character-vector-according-to-a-specific-order
+    ord <-  c("Treatment1 First", "Treatment2 Second", "Treatment2 First", "Treatment1 Second")
+    d1$spray <- factor(d1$spray,levels=ord)
+    d1 <- d1[order(d1$spray),]
+    
+    # create jitter vars
+    d1$xj <- cumsum(c(TRUE, d1$spray[-1]!=d1$spray[-length(d1$spray)]))
+    d1$xj <- d1$xj+rnorm(nrow(d1), 0, .10)
+    d1$yj <- d1$count +  rnorm(nrow(d1), 0, .15) 
+    
+    
+    
+    attach(d1)
+    
+    sprayTypes <- unique(spray)
+    
+    y <- as.numeric(as.character(d1[,4]))
+    
+    plot(y, as.factor(d1[,5]) ,  ylim=c(min(y)-0,max(y)+0) , xlim=c(0.5, 4.5) , xaxt="n",
+         main="Hall and Armitage data. Plot of AB sequence on left, BA on right\n Dashed lines join paired data, Mean and 95% CI shown",
+         xlab="", ylab="Outcome measure", frame.plot  =F , col="white")  
+    ##if not white I get a nasty boxplot
+    
+    axis(1,  at=1:4, labels=F )
+    
+    text(x=1:length(sprayTypes)*1.15, par("usr")[3]-.8, labels = sprayTypes, 
+         srt = 15, pos = 2, xpd = TRUE,  
+         cex.axis=.5 )
+    
+    ##make colours
+    chk <- as.character(d1$spray)
+    x <- as.data.frame(table(chk))
+    
+    clr <- c("blue","red")
+    
+    
+
+    for (i in 1 : length(sprayTypes)) {
+      
+      n <- sum(spray == sprayTypes[i])
+      
+      y <- count[spray == sprayTypes[i]]  
+      
+      xi <- xj[spray == sprayTypes[i]]
+      
+      yi <- yj[spray == sprayTypes[i]]
+  
+      points(x=xi, y=yi, pch = 16, cex = .9, 
+             col =ifelse(i %in% c(1,4),clr[1],clr[2])
+        )
+       
+      # y is used here
+      lines(i +  c(.12, .28), rep(mean(y), 2), lwd = 1, col="black") # 
+      
+      lines(rep(i + .2, 2),  # start and end
+            mean(y) + c(-1.96, 1.96) * sd(y) / sqrt(n),  lwd = 1, col="black"
+      ) # vertical
+      
+    }
+    
+ 
+    # join the pairs
+    # manage the data , create a new wide data set of 4 coordinates
+    
+     w1 <- d1[,c(1,3,6,7)]
+    
+     data1 <- melt(w1 , id.vars = c("Patient", "Order"))
+    
+     data1$temp <- paste(data1$Order, data1$variable)
+     
+     wx <- reshape(data1[,c(1,4,5)], idvar="Patient",
+                   v.names="value", timevar=c("temp"),
+                   direction="wide")
+     
+     wx <- wx[,c(1,2,4,3,5)]
+    
+     names(wx) <- c("Patient","x1","y1","x2","y2")
+     
+    
+    for(s in 1:nrow(wx)) {
+   
+        segments(wx$x1[s], wx$y1[s], wx$x2[s], wx$y2[s], col="brown", lwd=0.5, lty=2)
+        
+    }
+     
+```
+
+## Comment
+
+
+```{r comment1,  echo=FALSE, results='asis'}    
+
+
+ cat("\nNice plot showing all the data, the blocking in the experiment (patient), the between patient distribution and the sequences of treatment. We would ideally expect AB and BA to be a relection of each other. We show the mean and 95% CI. In fact the standard errors or confidence intervals for individual means are based on an assumption of simple random sampling that is not the case in the crossover trial. So maybe a boxplot would be better. Random noise (jitter) added to datapoints in both x and y axes to make visualisation better.\n") 
+   
+
+```
+
+\newpage
+
+## Plot the data once again
+
+```{r plot2}
+      
+    mydata <- all
+    require("PairedData")
+    # useful concatenation for plotting
+    mydata$temp <- paste(mydata$Treatment, mydata$Order, sep=".")
+    
+    Treatment1.First <- subset(mydata,  temp == "Treatment1.First", Response, drop = TRUE)
+    Treatment2.Second <- subset(mydata,  temp == "Treatment2.Second", Response, drop = TRUE)
+     
+    pd <- paired(Treatment1.First, Treatment2.Second)
+    plot(pd, type = "profile") + theme_bw()
+       
+    cat("\n\n\\pagebreak\n")
+ 
+    Treatment2.First <- subset(mydata,  temp == "Treatment2.First", Response, drop = TRUE)
+    Treatment1.Second <- subset(mydata,  temp == "Treatment1.Second", Response, drop = TRUE)
+     
+    pd <- paired(Treatment2.First, Treatment1.Second)
+   # plot(pd, type = "BA") + theme_bw()
+    plot(pd, type = "profile") + theme_bw() 
+      
+      
+```
+
+\newpage
+
 ## Period and treatment summary stats, agree with paper
 
 ```{r analyse}
@@ -155,9 +302,9 @@ p4 <- function(x) {formatC(x, format="f", digits=4)}
 
 \newpage
 
-## Fit a random effects model (not checking for order nor interaction) and linear regression model
+## Fit a random effects model (no order nor interaction term)  
 
-```{r sim2}
+```{r nlma}
 
    require(nlme)
    f <- lme(Response ~ Treatment  , random=~1 | Patient, data=all, na.action="na.omit" )
@@ -170,7 +317,14 @@ p4 <- function(x) {formatC(x, format="f", digits=4)}
    # collect the treatment effect estimate to make inferences later
    z <- as.matrix(summary(f)$tTable)
    Treatment    <- z[2,1][[1]]
-   
+
+```
+
+\newpage
+
+## Fit a linear regression model
+
+```{r lm}      
    
    f <- lm(Response ~ Treatment , data=all, na.action="na.omit" )
    summary(f)
@@ -248,7 +402,7 @@ p4 <- function(x) {formatC(x, format="f", digits=4)}
       }
              
         
-         estArray[s,1]   <- z[2,1][[1]]         # collect trt effect estimate
+         estArray[s,1]  <- z[2,1][[1]]         # collect trt effect estimate
          estArray[s,2]   <- vcov(modelint)[2,2] # collect variance of trt effect estimate
          
          
@@ -261,6 +415,16 @@ p4 <- function(x) {formatC(x, format="f", digits=4)}
    } 
    
    
+```
+
+## Comment
+
+
+```{r comment2,  echo=FALSE, results='asis'}    
+
+
+
+ cat("\nFunction that allows one to permutate data either conditioning on patient (block) correctly by permuting the two values within patient or ignoring the blocking and permuting across all the data. Secondly to run the correct analysis conditioning on patient (LMM model) or not conditioning on patient OLS model.\n") 
   
    
 ```
@@ -271,20 +435,27 @@ p4 <- function(x) {formatC(x, format="f", digits=4)}
 
 ```{r analyse3}
 
-   block    <- perm.dist(block="yes", n.sims=10000)
+   block    <- perm.dist(block="yes", n.sims=sim)
    
-   no.block <- perm.dist(block="no", n.sims=10000)
+   no.block <- perm.dist(block="no", n.sims=sim)
 
 ```
 
 \newpage
 
-## Plot the distributions
+## Plot the treatment effect permutation distributions and present the treatment effect estimate
 
-```{r sim data, eval=FALSE}
+```{r sim data, eval=TRUE}
 
-    plot(density(block))
-    plot(density(no.block))
+   
+     A <- block$estArray[,1]
+     B <- no.block$estArray[,1] 
+    
+     plot(density(A), col="red", main="Estimated Treatment Effect (green circle) \nred denotes not blocking, blue conditioned on patient\n", xlab="Permuted treatment effect") 
+     lines(density(B),col="blue")
+     points(x= Treatment, y=0, col = "darkgreen", cex = 1.5, pch=19)
+    
+    
      
 ```
 
@@ -295,26 +466,90 @@ p4 <- function(x) {formatC(x, format="f", digits=4)}
 ```{r plot1, eval=TRUE, results='asis'}    
     
      # see Senn 34.09mins right panel youtube, good match!
-     sum(abs(block$estArray[,1]) >= abs(Treatment))/10000  # Senn 0.0014
-     sum(abs(no.block$estArray[,1]) >= abs(Treatment))/10000  # Senn 0.034
+     sum(abs(block$estArray[,1]) >= abs(Treatment))/sim  # Senn 0.0014
+     sum(abs(no.block$estArray[,1]) >= abs(Treatment))/sim  # Senn 0.034
     
 ```
 
 \newpage
 
-## Summary statisitcs
+## Summary statisitcs from the permutation approaches
 
 ```{r plot2 code,   eval=TRUE} 
 
-     apply(block$estArray, 2, summary)
 
-     apply(block$estArray, 2, var)
-     
-     apply(no.block$estArray, 2, summary)
-     
-     apply(no.block$estArray, 2, var)
 
-  
+
+    # Manage the estimates
+    # Blocked
+    A <- as.data.frame( apply(block$estArray, 2, summary))
+    names(A) <-c("LMM Mean trt effect","LMM Mean Var of trt effect","Ols Mean trt effect","Ols Mean Var of trt effect")
+ 
+ 
+     B <- t(as.data.frame(unlist( apply(block$estArray, 2, var))))
+     rownames(B) <- NULL
+     B <- as.data.frame(B)
+     names(B) <-c("Var of LMM trt effect","Var of LMM Var of trt effect","Var of Ols trt effect","Var of Ols Var of trt effect")  
+    
+     # not blocked
+     C <- as.data.frame( apply(no.block$estArray, 2, summary))
+     names(C) <- names(A)
+ 
+ 
+     D <- t(as.data.frame(unlist( apply(no.block$estArray, 2, var))))
+     rownames(D) <- NULL
+     D <- as.data.frame(D)
+     names(D) <-names(B)  
+     
+     
+     
+```
+
+\newpage
+
+## Blocked estimates
+
+```{r blocked,   eval=TRUE} 
+
+
+
+    knitr::kable(A)
+    knitr::kable(B)
+
+
+```
+
+## Not conditioned on blocking, estimates
+
+```{r not blocked,   eval=TRUE} 
+
+
+    knitr::kable(C)
+    knitr::kable(D)
+
+
+```
+
+\newpage
+
+## Summary
+
+
+```{r comment,  echo=FALSE, results='asis'}    
+
+# TABLE 4 COL 3/ table 3 col 4  D[3]/C[4,4]
+# table 2 COL 1/ TABLE 1 COL2 OK  B[1] A[4,2]
+# TABL 2 COL 3/TABL1 COL 4        B[3] A[4,4]
+
+cat("\nAs Stephen Senn explains in the video. Analysis must relect the block structure. Looking at the distributions of the permutated treatment effects, the effect is the same average difference. The distribution accounting for the fact the same patient is treated on two different occasions is narrower than the distribution that does not condition on patient, in consequence much more unusal event compared to the permutation distribution. (If covariates differ greatly from one patient to another we will see it in the residual error term and we make a judgement of efficacy of something compared to residual error term. Notice the different permutation p-values and compare to parametric p-values. Moral, more important than deciding to use a linear model or permutation test is to condition on block structure of experiment.\n")      
+
+cat("\nWhat happens when you balance but don't condition: That is to say, permute values respecting the fact that they come from a crossover but analysing them as if they came from parallel group trial:\n")
+
+cat("\nApproach, completely randomised and analysed as such", D[3][[1]],". Variance of the treatment effect is equal to the mean of the variance (of treatment effect over all randomisations)",C[4,4][[1]],"\n")
+
+cat("\nApproach, randomised within patient and analysed as such", B[1][[1]],". Variance of the treatment effect is equal to the mean of the variance (of treatment effect over all randomisations)",A[4,2][[1]],"\n")
+
+cat("\nApproach, randomised within patient and analysed as completely randomised", B[3][[1]],". Variance of the treatment effect is not equal to the mean of the variance (of treatment effect over all randomisations)",A[4,4][[1]],"\n")
 ```
 
 \newpage  
@@ -323,13 +558,13 @@ p4 <- function(x) {formatC(x, format="f", digits=4)}
 
 ```{r}
 
-sessionInfo()
+   sessionInfo()
 
 ```
 
 ```{r echo=FALSE}
 
-stopTime<-proc.time()
+   stopTime<-proc.time()
 
 ```
 
