@@ -15,7 +15,7 @@ ui <-shinyUI(pageWithSidebar(
     
     sidebarPanel(
         
-        div(p("Relate frequentist modeling choices to summaries of the models and plot the data.")),
+        div(p("Relate frequentist modelling choices to summaries of the models and plot the data.")),
         
         div(
             
