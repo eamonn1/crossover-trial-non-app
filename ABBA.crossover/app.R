@@ -1,8 +1,7 @@
 library(shiny)
 library(RColorBrewer)
 
-# based on https://gallery.shinyapps.io/multi_regression/
-# code https://github.com/mwaskom/ShinyApps/tree/master/multi_regression
+# Rshiny ideas from on https://gallery.shinyapps.io/multi_regression/
 
 library(shiny)
 
@@ -12,7 +11,8 @@ fig.height <- 450
 ui <-shinyUI(pageWithSidebar(
     
     headerPanel("Modelling two period crossover trial"),
-    
+
+
     sidebarPanel(
         
         div(p("Frequentist modelling, choices to model and a plot of the data.")),
@@ -24,12 +24,18 @@ ui <-shinyUI(pageWithSidebar(
                         choices=c("Additive model",
                                   "Interactive model")),
             
-            div(p("Select the true population parameters and a two period crossover data set is simulated (no missing data). A plot of the raw data is generated. You also have the choices of selecting a new sample or fitting a main effects or interaction.")),
+            div(p("Select the true population parameters and a two period crossover data set is simulated (no missing data). A plot of the raw data is generated. 
+                  You also have the choices of selecting a new sample or fitting a main effects or interaction.")),
+           
+         
+            br(),
+            actionButton("resample", "Simulate a new sample"),
+            br(),
+            br(),
+            actionButton(inputId='ab1', label="R code here", 
+                         icon = icon("th"), 
+                         onclick ="window.open('https://raw.githubusercontent.com/eamonn2014/crossover-trial/master/ABBA.crossover/app.R', '_blank')"),
             
-            br(),
-            br(),
-            actionButton("resample", "New Sample"),
-            br(),
             br(),
             br(),
             p(strong("Generate true population parameters:")),
@@ -61,7 +67,6 @@ ui <-shinyUI(pageWithSidebar(
         div(plotOutput("reg.plot", width=fig.width, height=fig.height)),
         div(class="span7", verbatimTextOutput("reg.summary"))
     )
-    
 ))
 
 
@@ -255,12 +260,7 @@ server <- shinyServer(function(input, output) {
         
     })
     
-    
-    # output$table <- renderTable({
-    #     data <- make.regression()
-    #     data$df()
-    # })
-    
+
 })
 
 
