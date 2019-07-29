@@ -15,7 +15,7 @@ ui <-shinyUI(pageWithSidebar(
     
     sidebarPanel(
         
-        div(p("Relate frequentist modelling choices to summaries of the models and plot the data.")),
+        div(p("Frequentist modelling, choices to model and a plot of the data.")),
         
         div(
             
@@ -24,7 +24,7 @@ ui <-shinyUI(pageWithSidebar(
                         choices=c("Additive model",
                                   "Interactive model")),
             
-            div(p("Select the true population parameters and a two period crossover data set is simulated (no missing data). A plot of the raw data is generated. You also have the choices of selecting a new sample or fitting an interaction.")),
+            div(p("Select the true population parameters and a two period crossover data set is simulated (no missing data). A plot of the raw data is generated. You also have the choices of selecting a new sample or fitting a main effects or interaction.")),
             
             br(),
             br(),
