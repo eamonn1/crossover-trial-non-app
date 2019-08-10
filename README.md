@@ -16,3 +16,5 @@ This simulates a two period crossver trial, plots and performs analysis. The cod
 https://eamonn.shinyapps.io/ABBA/
 
   
+Crossover-Trial-Power-Simulation-en-mass-and-Plotting.Rmd and pdf
+This explores power for ABBA crossover trial allowing more than one parameter to vary and plot the results
