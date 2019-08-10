@@ -12,5 +12,7 @@ Simulate more sophisticatedly where one can vary one parameter. Simulate one tri
 'THE-TWO-PERIOD-CROSS-OVER-CLINICAL-TRIAL' Based on Stephen Senn talk on youtube https://www.youtube.com/watch?v=uTrVhIwy8e8 '70 Years Old and Still Here: The Randomized Clinical Trial and its Critics - Stephen Senn' Here I analyse the trial and plot the data whilst duplicating Senn's presentaion (permutation approach to the analysis). An improved plot for ABBA here also.
 
 ABBA Shiny App.
-This simulates a two period crossver trial, plots and analyses. The code is in the App in the repository and is deployed here:
+This simulates a two period crossver trial, plots and performs analysis. The code is in the App in the repository and is deployed here:
 https://eamonn.shinyapps.io/ABBA/
+
+  
