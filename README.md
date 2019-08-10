@@ -6,6 +6,7 @@ https://github.com/eamonn2014/crossover-trial/blob/master/Crossover-Trial-Simula
 
 'Crossover-Trial-Simulation-Power'
 Showing the analysis of ABBA using lme4 and nlme
+https://github.com/eamonn2014/crossover-trial/blob/master/Crossover-Trial-Simulation-Power.pdf
 
 
 'Crossover-Trial-Further-Simulation-and-Plotting' 
@@ -14,6 +15,7 @@ https://github.com/eamonn2014/crossover-trial/blob/master/Crossover-Trial-Furthe
 
 
 'THE-TWO-PERIOD-CROSS-OVER-CLINICAL-TRIAL' Based on Stephen Senn talk on youtube https://www.youtube.com/watch?v=uTrVhIwy8e8 '70 Years Old and Still Here: The Randomized Clinical Trial and its Critics - Stephen Senn' Here I analyse the trial and plot the data whilst duplicating Senn's presentaion (permutation approach to the analysis). An improved plot for ABBA here also.
+
 
 ABBA Shiny App.
 This simulates a two period crossver trial, plots and performs analysis. The code is in the App in the repository and is deployed here:
