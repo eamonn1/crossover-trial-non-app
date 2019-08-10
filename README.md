@@ -18,3 +18,4 @@ https://eamonn.shinyapps.io/ABBA/
   
 Crossover-Trial-Power-Simulation-en-mass-and-Plotting.Rmd and pdf
 This explores power for ABBA crossover trial allowing more than one parameter to vary and plot the results
+https://github.com/eamonn2014/crossover-trial/blob/master/Crossover-Trial-Power-Simulation-en-mass-and-Plotting.pdf
