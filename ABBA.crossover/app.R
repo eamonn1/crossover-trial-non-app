@@ -60,7 +60,14 @@ ui <-shinyUI(pageWithSidebar(
             sliderInput("f",
                         "True between person standard deviation",
                         min=0.1, max=5, step=.1, value=1, ticks=FALSE)
-        )
+        ),
+        
+        br(),
+        br(),
+        div(p("Reference:")),  
+        
+        tags$a(href = "https://biostatmatt.com/archives/2315", "Thanks to BioStatMatt"),
+        div(p(" ")) 
     ),
     
     mainPanel(
