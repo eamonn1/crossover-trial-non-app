@@ -5,7 +5,7 @@ library(RColorBrewer)
 
 library(shiny)
 
-fig.width <- 600
+fig.width <- 1000
 fig.height <- 450
 
 ui <-shinyUI(pageWithSidebar(
@@ -179,7 +179,7 @@ server <- shinyServer(function(input, output) {
         y <- as.numeric(as.character(d1[,4]))
         
         plot(y, as.factor(d1[,5]) ,  ylim=c(min(y)-0,max(y)+0) , xlim=c(0.5, 4.5) , xaxt="n",
-             main="Plot of AB sequence on left, BA on right\n Dashed lines join paired data. \n(Small amount of jitter added to data).",
+             main="Plot of AB sequence on left, BA on right, dashed lines join paired data (small amount of jitter added to data).",
              xlab="", ylab="Outcome measure", frame.plot  =F , col="white")  
         ##if not white I get a nasty boxplot
         
@@ -240,7 +240,7 @@ server <- shinyServer(function(input, output) {
         
         for(s in 1:nrow(wx)) {
             
-            segments(wx$x1[s], wx$y1[s], wx$x2[s], wx$y2[s], col="brown", lwd=0.5, lty=2)
+            segments(wx$x1[s], wx$y1[s], wx$x2[s], wx$y2[s], col="pink", lwd=0.5, lty=2)
             
         }
         
